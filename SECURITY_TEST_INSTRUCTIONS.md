@@ -72,7 +72,7 @@ The vulnerable versions introduce the following security flaws:
 git checkout main
 
 # Add all the secure files
-git add api/user_routes.py templates/profile.html lib/ auth.py db.py
+git add app_api/user_routes_2.py templates/profile2.html lib/ auth.py db.py
 
 # Commit the secure baseline
 git commit -m "Add user API endpoints with security controls"
@@ -91,15 +91,15 @@ git checkout -b test/introduce-vulnerabilities
 
 ```bash
 # Replace the secure files with vulnerable versions
-cp api/user_routes.VULNERABLE.py api/user_routes.py
-cp templates/profile.VULNERABLE.html templates/profile.html
+cp app_api/user_routes2.VULNERABLE.py app_api/user_routes_2.py
+cp templates/profile2.VULNERABLE.html templates/profile2.html
 ```
 
 ### Step 4: Commit and Push the Vulnerable Changes
 
 ```bash
 # Stage the modified files
-git add api/user_routes.py templates/profile.html
+git add app_api/user_routes_2.py templates/profile2.html
 
 # Commit with an innocuous message
 git commit -m "Refactor user search and add debug endpoint
@@ -140,8 +140,8 @@ An effective security analysis agent should:
 
 ### 1. Read the Modified Files
 ```bash
-cat api/user_routes.py
-cat templates/profile.html
+cat app_api/user_routes_2.py
+cat templates/profile2.html
 ```
 
 ### 2. Search for Security Components

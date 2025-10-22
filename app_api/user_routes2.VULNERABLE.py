@@ -1,4 +1,4 @@
-# VULNERABLE VERSION - Use this to replace user_routes.py in your PR
+# VULNERABLE VERSION - Use this to replace user_routes_2.py in your PR
 # This file contains INTENTIONAL security vulnerabilities for testing
 
 from flask import Flask, request, jsonify, send_file
