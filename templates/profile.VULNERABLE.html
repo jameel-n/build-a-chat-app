@@ -1,0 +1,20 @@
+<!-- VULNERABLE VERSION - Use this to replace profile.html in your PR -->
+<!-- This file contains INTENTIONAL security vulnerabilities for testing -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Profile</title>
+</head>
+<body>
+    <h1>Profile: {{ username|e }}</h1>
+    <div class="bio">
+        <!-- VULNERABILITY 6: XSS - Using safe filter to bypass escaping -->
+        {{ user_bio|safe }}
+    </div>
+    <div class="stats">
+        <p>Posts: {{ post_count }}</p>
+        <p>Followers: {{ follower_count }}</p>
+    </div>
+</body>
+</html>

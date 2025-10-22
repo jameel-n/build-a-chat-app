@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Profile</title>
+</head>
+<body>
+    <h1>Profile: {{ username|e }}</h1>
+    <div class="bio">
+        <!-- Secure: Auto-escaped by Jinja2 -->
+        {{ user_bio|e }}
+    </div>
+    <div class="stats">
+        <p>Posts: {{ post_count }}</p>
+        <p>Followers: {{ follower_count }}</p>
+    </div>
+</body>
+</html>
