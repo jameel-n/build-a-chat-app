@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatApp - Secure Messaging</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .message {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .link {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .link a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .link a:hover {
+            text-decoration: underline;
+        }
+
+        #chatInterface {
+            display: none;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 5px 5px 0 0;
+            margin: -40px -40px 20px -40px;
+        }
+
+        .messages-container {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .message-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+
+        .message-sender {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .message-content {
+            color: #333;
+        }
+
+        .message-time {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="loginForm">
+            <h1>ChatApp Login</h1>
+
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter your username">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password">
+            </div>
+
+            <button onclick="login()">Login</button>
+
+            <div id="loginMessage" class="message"></div>
+
+            <div class="link">
+                <a href="#" onclick="showRegister()">Don't have an account? Register</a>
+            </div>
+        </div>
+
+        <div id="chatInterface">
+            <div class="chat-header">
+                <h2>Welcome, <span id="currentUser"></span></h2>
+                <button onclick="logout()" style="background: rgba(255,255,255,0.2); margin-top: 10px;">Logout</button>
+            </div>
+
+            <div class="form-group">
+                <label for="searchUsers">Search Users</label>
+                <input type="text" id="searchUsers" placeholder="Search for users..." onkeyup="searchUsers()">
+                <div id="searchResults" style="margin-top: 10px;"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="recipient">Send Message To</label>
+                <input type="text" id="recipient" placeholder="Recipient username">
+            </div>
+
+            <div class="form-group">
+                <label for="messageText">Message</label>
+                <input type="text" id="messageText" placeholder="Type your message...">
+            </div>
+
+            <button onclick="sendMessage()">Send Message</button>
+
+            <div class="messages-container" id="messagesContainer">
+                <p style="text-align: center; color: #999;">Your messages will appear here</p>
+            </div>
+
+            <button onclick="loadMessages()">Refresh Messages</button>
+        </div>
+    </div>
+
+    <script>
+        let currentUserData = null;
+
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            fetch('http://localhost:5000/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentUserData = data.user;
+                    localStorage.setItem('auth_token', data.token);
+                    localStorage.setItem('username', data.user.username);
+
+                    showMessage('loginMessage', 'Login successful!', 'success');
+
+                    setTimeout(() => {
+                        document.getElementById('loginForm').style.display = 'none';
+                        document.getElementById('chatInterface').style.display = 'block';
+                        document.getElementById('currentUser').textContent = data.user.username;
+                        loadMessages();
+                    }, 1000);
+                } else {
+                    showMessage('loginMessage', 'Login failed: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('loginMessage', 'Error: ' + error.message, 'error');
+            });
+        }
+
+        function searchUsers() {
+            const query = document.getElementById('searchUsers').value;
+
+            if (query.length < 2) {
+                document.getElementById('searchResults').innerHTML = '';
+                return;
+            }
+
+            fetch('http://localhost:5000/api/users/search?q=' + encodeURIComponent(query))
+            .then(response => response.json())
+            .then(data => {
+                let html = '<div style="border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: #f8f9fa;">';
+
+                if (data.users && data.users.length > 0) {
+                    data.users.forEach(user => {
+                        // Directly rendering user data without escaping
+                        html += '<div style="padding: 5px; cursor: pointer;" onclick="selectUser(\'' + user.username + '\')">';
+                        html += '<strong>' + user.username + '</strong> - ' + user.email;
+                        html += '</div>';
+                    });
+                } else {
+                    html += '<p>No users found</p>';
+                }
+
+                html += '</div>';
+
+                // VULNERABILITY: innerHTML with unescaped data
+                document.getElementById('searchResults').innerHTML = html;
+            });
+        }
+
+        function selectUser(username) {
+            document.getElementById('recipient').value = username;
+        }
+
+        function sendMessage() {
+            const recipient = document.getElementById('recipient').value;
+            const content = document.getElementById('messageText').value;
+            const token = localStorage.getItem('auth_token');
+
+            if (!recipient || !content) {
+                alert('Please enter recipient and message');
+                return;
+            }
+
+            fetch('http://localhost:5000/api/messages/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    to: recipient,
+                    content: content
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Message sent!');
+                    document.getElementById('messageText').value = '';
+                    loadMessages();
+                } else {
+                    alert('Failed to send message');
+                }
+            });
+        }
+
+        function loadMessages() {
+            const username = localStorage.getItem('username');
+
+            fetch('http://localhost:5000/api/messages/inbox/' + username)
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('messagesContainer');
+                let html = '';
+
+                if (data.messages && data.messages.length > 0) {
+                    data.messages.forEach(msg => {
+                        html += '<div class="message-item">';
+                        html += '<div class="message-sender">' + msg.from_user + '</div>';
+                        // VULNERABILITY: Unescaped message content - allows stored XSS
+                        html += '<div class="message-content">' + msg.content + '</div>';
+                        html += '<div class="message-time">' + msg.sent_at + '</div>';
+                        html += '</div>';
+                    });
+                } else {
+                    html = '<p style="text-align: center; color: #999;">No messages yet</p>';
+                }
+
+                // VULNERABILITY: innerHTML with unescaped user content
+                container.innerHTML = html;
+            });
+        }
+
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = 'message ' + type;
+            element.style.display = 'block';
+
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        function logout() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('username');
+            currentUserData = null;
+
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('chatInterface').style.display = 'none';
+        }
+
+        // Check if already logged in
+        if (localStorage.getItem('auth_token')) {
+            const username = localStorage.getItem('username');
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('chatInterface').style.display = 'block';
+            document.getElementById('currentUser').textContent = username;
+            loadMessages();
+        }
+
+        // Auto-refresh messages every 5 seconds
+        setInterval(() => {
+            if (document.getElementById('chatInterface').style.display !== 'none') {
+                loadMessages();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
